@@ -4,9 +4,9 @@ val: valid/images
 test: test/images
 
 names:
-  0: Powdery_mildew_on_lettuce
-  1: Wilt_and_leaf_blight_on_lettuce
-  2: Healthy
+  0: daun bercak
+  1: daun busuk
+  2: sehat
 
 roboflow:
   workspace: selada
