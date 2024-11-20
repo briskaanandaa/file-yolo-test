@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deteksi Penyakit dengan YOLOv5</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+      }
+
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        gap: 20px;
+        width: 90%;
+        max-width: 1200px;
+      }
+
+      .box {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        padding: 20px;
+        width: 45%;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+      }
+
+      button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      canvas,
+      video {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        margin-bottom: 10px;
+      }
+
+      input[type="file"] {
+        margin-top: 10px;
+      }
+
+      .detection-result {
+        white-space: pre-wrap;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Kotak 1: Kamera Pendeteksi -->
+      <div class="box" id="camera-box">
+        <h3>Kamera Pendeteksi</h3>
+        <video id="video-feed" autoplay></video>
+        <button id="capture-btn">Capture</button>
+      </div>
+
+      <!-- Kotak 2: Hasil Deteksi (Dari Kamera) -->
+      <div class="box" id="result-box">
+        <h3>Hasil Deteksi (Dari Kamera)</h3>
+        <canvas id="captured-image" width="640" height="480"></canvas>
+        <button id="check-result">Cek Hasil</button>
+        <div id="detection-result" class="detection-result"></div>
+      </div>
+
+      <!-- Kotak 3: Unggah Gambar -->
+      <div class="box" id="upload-box">
+        <h3>Unggah Gambar</h3>
+        <input type="file" id="file-input" />
+        <button id="upload-btn">Upload</button>
+      </div>
+
+      <!-- Kotak 4: Hasil Deteksi (Dari Gambar Unggahan) -->
+      <div class="box" id="upload-result-box">
+        <h3>Hasil Deteksi (Dari Gambar Unggahan)</h3>
+        <img id="uploaded-image" width="100%" />
+        <div id="upload-detection-result" class="detection-result"></div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcam-easy/1.0.5/webcam-easy.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      // Pemetaan nama berdasarkan kelas
+      const detectionNames = {
+        0: "Powdery mildew on lettuce", // Class 0
+        1: "Wilt and leaf blight on lettuce", // Class 1
+        2: "Healthy", // Class 2
+      };
+
+      // Mengakses elemen
+      const videoFeed = document.getElementById("video-feed");
+      const captureBtn = document.getElementById("capture-btn");
+      const capturedImageCanvas = document.getElementById("captured-image");
+      const checkResultBtn = document.getElementById("check-result");
+      const detectionResultDiv = document.getElementById("detection-result");
+
+      const fileInput = document.getElementById("file-input");
+      const uploadBtn = document.getElementById("upload-btn");
+      const uploadedImage = document.getElementById("uploaded-image");
+      const uploadDetectionResultDiv = document.getElementById(
+        "upload-detection-result"
+      );
+
+      // Fungsi untuk mengakses kamera dan menampilkan feed
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+          videoFeed.srcObject = stream;
+        })
+        .catch((err) => {
+          console.error("Failed to access camera:", err);
+        });
+
+      // Fungsi untuk menangkap gambar dari kamera
+      captureBtn.addEventListener("click", () => {
+        const context = capturedImageCanvas.getContext("2d");
+        context.drawImage(
+          videoFeed,
+          0,
+          0,
+          capturedImageCanvas.width,
+          capturedImageCanvas.height
+        );
+      });
+
+      // Fungsi untuk menangani hasil deteksi dan mengganti nama berdasarkan kelas
+      function handleDetectionResults(detections) {
+        // Pemetaan nama deteksi berdasarkan kelas
+        return detections.map((detection) => {
+          const newName = detectionNames[detection.class];
+          return {
+            ...detection,
+            name: newName ? newName : detection.name, // Ganti nama sesuai pemetaan
+          };
+        });
+      }
+
+      // Fungsi untuk mengirim gambar yang diambil ke backend
+      checkResultBtn.addEventListener("click", () => {
+        const canvas = capturedImageCanvas;
+        canvas.toBlob((blob) => {
+          const formData = new FormData();
+          formData.append("image", blob, "captured.jpg");
+
+          fetch("/predict", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              // Menangani hasil deteksi dan mengganti nama
+              const detectionResults = handleDetectionResults(data.detections);
+
+              // Menampilkan hasil deteksi
+              detectionResultDiv.innerHTML = `<pre>${JSON.stringify(
+                detectionResults,
+                null,
+                2
+              )}</pre>`;
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+      });
+
+      // Fungsi untuk mengunggah gambar dan mengirimkannya ke backend
+      uploadBtn.addEventListener("click", () => {
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append("image", file);
+
+        fetch("/predict", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            uploadedImage.src = "data:image/jpeg;base64," + data.image;
+
+            // Menangani hasil deteksi dan mengganti nama
+            const detectionResults = handleDetectionResults(data.detections);
+
+            // Menampilkan hasil deteksi
+            uploadDetectionResultDiv.innerHTML = `<pre>${JSON.stringify(
+              detectionResults,
+              null,
+              2
+            )}</pre>`;
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      });
+    </script>
+  </body>
+</html>
