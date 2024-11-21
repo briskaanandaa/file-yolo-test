@@ -14,18 +14,18 @@ model = torch.hub.load('ultralytics/yolov5', 'custom', path=r'C:/Users/Asus/Down
 
 # Pemetaan indeks ke solusi penyakit
 disease_solutions = {
-    0: {
-        "name": "Daun Bercak",
-        "solution": "Gunakan fungisida berbasis tembaga untuk mengendalikan infeksi jamur.",
-    },
-    1: {
-        "name": "Daun Busuk",
-        "solution": "Pastikan drainase yang baik, hindari overwatering, dan perbaiki sirkulasi udara.",
-    },
-    2: {
-        "name": "Sehat",
-        "solution": "Tidak ada tindakan yang diperlukan. Tanaman sehat.",
-    }
+    0: {  
+    "name": "Daun Bercak",  
+    "solution": "Gunakan fungisida berbasis tembaga dengan konsentrasi 1-2 gram per liter air untuk mengendalikan infeksi jamur. Semprotkan larutan ini secara merata pada daun yang menunjukkan gejala bercak. Selain itu, pastikan pH larutan AB Mix berada pada kisaran 5.5–6.0 untuk membantu penyerapan nutrisi dengan optimal. Hindari rockwool yang terlalu basah dengan mengurangi frekuensi penyiraman dan meningkatkan ventilasi di sekitar area tanaman. Lakukan pembersihan area tanam untuk menghindari penyebaran spora jamur yang dapat menginfeksi tanaman lain."  
+},  
+1: {  
+    "name": "Daun Busuk",  
+    "solution": "Pastikan sistem drainase berfungsi dengan baik agar air tidak tergenang di sekitar akar, karena kondisi terlalu lembap dapat memicu pembusukan. Hindari overwatering dengan memantau kebutuhan air tanaman secara berkala dan hanya menyiram ketika rockwool mulai mengering. Tingkatkan sirkulasi udara di sekitar tanaman menggunakan kipas kecil atau ventilasi tambahan untuk mengurangi kelembapan. Stabilkan pH larutan AB Mix pada kisaran 5.8–6.2 agar nutrisi tetap seimbang dan mendukung pemulihan tanaman. Jika ada bagian daun yang sudah rusak parah, potong dan buang untuk mencegah infeksi menyebar lebih luas."  
+},  
+2: {  
+    "name": "Sehat",  
+    "solution": "Tidak ada tindakan khusus yang diperlukan, tetapi tetap lakukan pemeliharaan rutin. Jaga pH larutan AB Mix pada kisaran 5.5–6.0 untuk memastikan tanaman tetap menerima nutrisi secara optimal. Periksa kelembapan rockwool secara berkala untuk memastikan media tetap lembap tetapi tidak terlalu basah. Bersihkan area tanam dari kotoran atau sisa daun yang gugur untuk menjaga kebersihan dan mencegah potensi munculnya penyakit. Lakukan inspeksi rutin terhadap daun dan batang tanaman untuk mendeteksi gejala penyakit sejak dini."  
+}  
 }
 
 # Fungsi untuk menggambar bounding box pada gambar
