@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Deteksi Penyakit dengan YOLOv5</title>
+    <title>Deteksi Penyakit dan Analisis Tanaman</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -33,14 +33,26 @@
         text-align: center;
       }
 
+      label {
+        display: block;
+        margin: 10px 0 5px;
+        font-weight: bold;
+      }
+
+      input,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
       button {
         background-color: #4caf50;
         color: white;
-        padding: 10px 15px;
-        border: none;
-        border-radius: 5px;
         cursor: pointer;
-        font-size: 16px;
       }
 
       button:hover {
@@ -64,14 +76,30 @@
   </head>
   <body>
     <div class="container">
+      <!-- Input Gambar dan Data -->
       <div class="box">
-        <h3>Unggah Gambar</h3>
+        <h3>Unggah Gambar & Data Tanaman</h3>
         <input type="file" id="file-input" />
-        <button id="upload-btn">Upload</button>
+        <label for="ph-input">pH Larutan:</label>
+        <input
+          type="number"
+          step="0.1"
+          id="ph-input"
+          placeholder="Masukkan pH (5.5-6.5)"
+        />
+        <label for="nutrient-input">Kadar Nutrisi (ppm):</label>
+        <input
+          type="number"
+          step="1"
+          id="nutrient-input"
+          placeholder="Masukkan kadar nutrisi (ppm)"
+        />
+        <button id="upload-btn">Unggah & Analisis</button>
       </div>
 
+      <!-- Hasil Analisis -->
       <div class="box">
-        <h3>Hasil Deteksi</h3>
+        <h3>Hasil Analisis</h3>
         <img id="uploaded-image" alt="Hasil deteksi akan ditampilkan di sini" />
         <div id="detection-result" class="detection-result"></div>
       </div>
@@ -80,18 +108,30 @@
     <script>
       const fileInput = document.getElementById("file-input");
       const uploadBtn = document.getElementById("upload-btn");
+      const phInput = document.getElementById("ph-input");
+      const nutrientInput = document.getElementById("nutrient-input");
       const uploadedImage = document.getElementById("uploaded-image");
       const detectionResultDiv = document.getElementById("detection-result");
 
       uploadBtn.addEventListener("click", () => {
         const file = fileInput.files[0];
+        const ph = phInput.value;
+        const nutrient = nutrientInput.value;
+
         if (!file) {
-          alert("Silakan pilih gambar terlebih dahulu.");
+          alert("Silakan unggah gambar terlebih dahulu.");
+          return;
+        }
+
+        if (!ph || !nutrient) {
+          alert("Silakan masukkan data pH dan nutrisi.");
           return;
         }
 
         const formData = new FormData();
         formData.append("image", file);
+        formData.append("ph", ph);
+        formData.append("nutrient", nutrient);
 
         fetch("/predict", {
           method: "POST",
@@ -101,14 +141,15 @@
           .then((data) => {
             uploadedImage.src = "data:image/jpeg;base64," + data.image;
             detectionResultDiv.innerHTML = data.detections
-              .map((det) => {
-                return `
-                <p><strong>${det.name}</strong>: ${det.solution}</p>
-              `;
-              })
+              .map(
+                (det) => `<p><strong>${det.name}</strong>: ${det.solution}</p>`
+              )
               .join("");
           })
-          .catch((error) => console.error("Error:", error));
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Terjadi kesalahan. Coba lagi.");
+          });
       });
     </script>
   </body>
