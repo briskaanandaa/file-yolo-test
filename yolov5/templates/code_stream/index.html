@@ -67,6 +67,12 @@
       .error {
         color: red;
       }
+      #esp-stream {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+      }
     </style>
   </head>
   <body>
@@ -115,15 +121,13 @@
         <h3>Deteksi Langsung dari Kamera ESP</h3>
         <!-- Streaming video dari ESP CAM -->
         <img
+          id="esp-stream"
           src="http://192.168.18.223:81/stream"
           alt="Live Streaming ESP CAM"
         />
-        <h3>Deteksi Langsung dari Kamera ESP</h3>
-        <button id="capture-btn">Deteksi dari ESP CAM</button>
-        <img
-          id="esp-cam-image"
-          alt="Hasil deteksi ESP CAM akan ditampilkan di sini"
-        />
+        <br />
+        <button id="capture-btn">Ambil Gambar dari Kamera ESP</button>
+        <img id="captured-image" alt="Gambar yang diambil dari ESP CAM" />
         <div id="esp-cam-result" class="detection-result"></div>
       </div>
     </div>
@@ -165,15 +169,15 @@
 
       // Fungsi untuk deteksi langsung dari ESP CAM
       const captureBtn = document.getElementById("capture-btn");
-      const espCamImage = document.getElementById("esp-cam-image");
+      const capturedImage = document.getElementById("captured-image");
       const espCamResultDiv = document.getElementById("esp-cam-result");
 
       captureBtn.addEventListener("click", () => {
-        fetch("/esp-cam")
+        fetch("/capture")
           .then((response) => response.json())
           .then((data) => {
             if (data.image) {
-              espCamImage.src = "data:image/jpeg;base64," + data.image;
+              capturedImage.src = "data:image/jpeg;base64," + data.image;
               espCamResultDiv.innerHTML = data.detections
                 .map(
                   (det) =>
