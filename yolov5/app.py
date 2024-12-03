@@ -37,12 +37,39 @@ def index():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Sama seperti sebelumnya: menerima gambar dari form, memproses dengan YOLOv5, dan menyesuaikan solusi berdasarkan pH/nutrient
-    ...
+    try:
+        # Terima file gambar dari form HTML
+        file = request.files['image']
+        if not file:
+            return jsonify({"error": "Tidak ada file yang diunggah"}), 400
+        
+        # Konversi file menjadi gambar PIL
+        img = Image.open(file.stream).convert('RGB')
+        
+        # Deteksi menggunakan YOLOv5
+        results = model(img)
+        detections = results.pandas().xyxy[0].to_dict(orient="records")
+        
+        # Sesuaikan nama dan solusi
+        for det in detections:
+            class_index = int(det['class'])
+            det['name'] = disease_solutions[class_index]["name"]
+            det['solution'] = disease_solutions[class_index]["solution"]
+        
+        # Gambar bounding box
+        img_with_bboxes = draw_bounding_boxes(img, detections)
+        
+        # Konversi ke base64 untuk ditampilkan
+        buffered = BytesIO()
+        img_with_bboxes.save(buffered, format="JPEG")
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        
+        return jsonify({'detections': detections, 'image': img_str})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/esp-cam', methods=['GET'])
 def esp_cam():
-    # Ambil frame dari ESP CAM
     try:
         # URL streaming ESP CAM
         url = "http://192.168.18.223/capture"
@@ -60,15 +87,15 @@ def esp_cam():
                 class_index = int(det['class'])
                 det['name'] = disease_solutions[class_index]["name"]
                 det['solution'] = disease_solutions[class_index]["solution"]
-
+            
             # Gambar bounding box
             img_with_bboxes = draw_bounding_boxes(img, detections)
-
+            
             # Konversi ke base64
             buffered = BytesIO()
             img_with_bboxes.save(buffered, format="JPEG")
             img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-
+            
             return jsonify({'detections': detections, 'image': img_str})
         else:
             return jsonify({"error": "Tidak dapat mengakses ESP CAM"}), 500
